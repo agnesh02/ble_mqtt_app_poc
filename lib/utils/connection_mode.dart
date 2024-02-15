@@ -1,0 +1,1 @@
+enum ConnectionMode { ble, mqtt }
