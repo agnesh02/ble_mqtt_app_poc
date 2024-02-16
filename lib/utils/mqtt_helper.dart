@@ -17,6 +17,7 @@ class MqttHelper {
 
   static const mqttPort = 8883;
   String mqttClientId = 'test_client';
+  String sampleTopic = "topic/sampleTopic";
 
   MqttServerClient initializeMqttClient() {
     mqttClient = MqttServerClient.withPort(

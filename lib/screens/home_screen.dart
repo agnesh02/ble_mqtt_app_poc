@@ -2,7 +2,6 @@ import 'package:ble_mqtt_app/screens/ble_activity_screen.dart';
 import 'package:ble_mqtt_app/screens/mqtt_activity_screen.dart';
 import 'package:ble_mqtt_app/utils/connection_mode.dart';
 import 'package:ble_mqtt_app/widgets/functionality_selection.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
