@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   mqtt_client: ^10.1.0
   flutter_riverpod: ^2.4.10
+  connectivity_plus: ^5.0.2
 
 dev_dependencies:
   flutter_test:

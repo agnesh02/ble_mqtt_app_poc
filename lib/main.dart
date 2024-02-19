@@ -1,8 +1,10 @@
 import 'package:ble_mqtt_app/screens/home_screen.dart';
+import 'package:ble_mqtt_app/utils/network_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 }
 

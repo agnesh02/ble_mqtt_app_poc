@@ -21,8 +21,13 @@ class MqttViewModel {
     return null;
   }
 
-  Future<void> connectMqttClient(
-      WidgetRef ref, username, String password) async {
+  Future<bool> connectMqttClient(
+    WidgetRef ref,
+    username,
+    String password,
+  ) async {
+    bool isConnectionSuccess = false;
+
     try {
       print('Connecting the client...');
       ref
@@ -43,6 +48,7 @@ class MqttViewModel {
 
       setUpListeners(ref);
       subscribeToTopics();
+      isConnectionSuccess = true;
     } else {
       print(
         'Client failed to connect: Status: ${mqttHelper.mqttClient.connectionStatus}',
@@ -52,6 +58,7 @@ class MqttViewModel {
           .read(mqttConnectionProvider.notifier)
           .updateConnectionState(MqttConnectionState.disconnected);
     }
+    return isConnectionSuccess;
   }
 
   void setUpListeners(WidgetRef ref) {

@@ -1,5 +1,6 @@
 import 'package:ble_mqtt_app/models/message.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
+import 'package:ble_mqtt_app/widgets/chat_bubble.dart';
 import 'package:flutter/material.dart';
 
 class MessageWindow extends StatelessWidget {
@@ -47,18 +48,39 @@ class MessageWindow extends StatelessWidget {
                   ? const Center(
                       child: Text("Start chatting..."),
                     )
-                  : Padding(
+                  : ListView.builder(
                       padding: const EdgeInsets.all(15.0),
-                      child: ListView.builder(
-                        itemCount: messages.length,
-                        itemBuilder: (cntxt, index) {
-                          TextAlign alignment = TextAlign.left;
-                          if (messages[index].contains("local")) {
-                            alignment = TextAlign.right;
+                      reverse: true,
+                      itemCount: messages.length,
+                      itemBuilder: (cntxt, i) {
+                        bool isLocal = false;
+                        bool isFirst = true;
+                        int index = messages.length - i - 1;
+                        var alignmentCondition =
+                            messages[index].contains("local");
+
+                        if (alignmentCondition) {
+                          isLocal = true;
+                        }
+                        if (index > 0) {
+                          var uiCondition =
+                              messages[index - 1].contains("local");
+                          if (isLocal) {
+                            if (uiCondition) {
+                              isFirst = false;
+                            }
+                          } else {
+                            if (!uiCondition) {
+                              isFirst = false;
+                            }
                           }
-                          return Text(messages[index], textAlign: alignment);
-                        },
-                      ),
+                        }
+                        return ChatBubble(
+                          isFirstInSequence: isFirst,
+                          message: messages[index],
+                          isMe: isLocal,
+                        );
+                      },
                     ),
             ),
           ),

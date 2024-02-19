@@ -3,6 +3,7 @@
         "hivemq",
         "MQTT",
         "riverpod",
+        "unfocus",
         "viewmodel"
     ]
 }
