@@ -29,6 +29,7 @@ class NetworkManager {
       connectionStatus = result;
       ref.read(connectivityProvider.notifier).updateConnectivityState(result);
       // onConnectionStateChanged(result);
+      ScaffoldMessenger.of(context).clearMaterialBanners();
       networkBanner(context, connectionStatus);
 
       print("RESULT $result");

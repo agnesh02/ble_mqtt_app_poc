@@ -8,19 +8,23 @@ ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>
 ) {
   String connectionStatusText = 'Unknown';
   Color connectionStatusColor = Colors.grey;
+  IconData iconData = Icons.question_mark;
 
   switch (connectionStatus) {
     case ConnectivityResult.wifi:
       connectionStatusText = 'Wi-Fi';
       connectionStatusColor = Colors.green;
+      iconData = Icons.wifi;
       break;
     case ConnectivityResult.mobile:
       connectionStatusText = 'Mobile';
       connectionStatusColor = Colors.green;
+      iconData = Icons.signal_cellular_alt;
       break;
     case ConnectivityResult.none:
       connectionStatusText = 'No Internet';
       connectionStatusColor = Colors.red;
+      iconData = Icons.signal_wifi_bad_rounded;
       break;
     default:
       connectionStatusText = 'Unknown';
@@ -36,7 +40,7 @@ ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>
         'Connection Status:\n$connectionStatusText',
         style: const TextStyle(color: Colors.white),
       ),
-      leading: const Icon(Icons.signal_wifi_bad_rounded),
+      leading: Icon(iconData),
       backgroundColor: connectionStatusColor,
       actions: <Widget>[
         TextButton(
