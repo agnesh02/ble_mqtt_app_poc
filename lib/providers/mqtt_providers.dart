@@ -26,3 +26,5 @@ final mqttMessagesProvider =
     StateNotifierProvider<MqttMessageNotifier, List<String>>(
   (ref) => MqttMessageNotifier(),
 );
+
+final nickNameProvider = StateProvider((ref) => "");

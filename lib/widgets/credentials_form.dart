@@ -4,6 +4,7 @@ import 'package:ble_mqtt_app/widgets/custom_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// ignore: must_be_immutable
 class CredentialsForm extends ConsumerWidget {
   CredentialsForm({
     super.key,

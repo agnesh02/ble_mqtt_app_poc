@@ -19,6 +19,7 @@ class MqttActivityScreen extends ConsumerWidget {
     final currentConnectionStatus = ref.watch(mqttConnectionProvider);
     final availableMessages = ref.watch(mqttMessagesProvider);
     final isConnected = ref.watch(connectivityProvider);
+    final nickName = ref.watch(nickNameProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -39,10 +40,12 @@ class MqttActivityScreen extends ConsumerWidget {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             )
-          : currentConnectionStatus == MqttConnectionState.connected
+          : currentConnectionStatus == MqttConnectionState.connected &&
+                  nickName != ""
               ? MessageWindow(
                   messages: availableMessages,
                   mqttViewModel: mqttViewModel,
+                  nickName: ref.read(nickNameProvider),
                 )
               : Align(
                   alignment: Alignment.center,
@@ -54,19 +57,25 @@ class MqttActivityScreen extends ConsumerWidget {
                         showDialog(
                             context: context,
                             builder: (cntxt) {
-                              return showConnectingDialog();
+                              return connectingDialog();
                             });
                         // mqttViewModel.connectMqttClient("admin", "admin123456");
                         await mqttViewModel
                             .connectMqttClient(ref, username, password)
                             .then((isSuccess) {
                           Navigator.of(context).pop();
-                          customSnackBar(
-                            context,
-                            isSuccess
-                                ? "Hey, you can start chatting now :)"
-                                : "Connection failed. Please recheck the credentials... :(",
-                          );
+                          if (isSuccess) {
+                            showDialog(
+                                context: context,
+                                builder: (cntxt) {
+                                  return addUserInfoDialog(context, ref);
+                                });
+                          } else {
+                            customSnackBar(
+                              context,
+                              "Connection failed. Please recheck the credentials... :(",
+                            );
+                          }
                         });
                       },
                     ),
@@ -75,7 +84,7 @@ class MqttActivityScreen extends ConsumerWidget {
     );
   }
 
-  AlertDialog showConnectingDialog() {
+  AlertDialog connectingDialog() {
     return const AlertDialog(
       title: Text(
         'Connecting with the broker...',
@@ -88,6 +97,55 @@ class MqttActivityScreen extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
+    );
+  }
+
+  AlertDialog addUserInfoDialog(BuildContext context, WidgetRef ref) {
+    final formKey = GlobalKey<FormState>();
+    String nickName = "";
+
+    void onSubmit() {
+      if (!formKey.currentState!.validate()) {
+        return;
+      }
+      formKey.currentState!.save();
+      ref.read(nickNameProvider.notifier).state = nickName;
+      Navigator.of(context).pop();
+      customSnackBar(context, "Hey, you can start chatting now :)");
+    }
+
+    return AlertDialog(
+      title: const Text(
+        'What do you want to be called ?',
+      ),
+      content: Padding(
+        padding: const EdgeInsets.only(top: 30.0),
+        child: Form(
+          key: formKey,
+          child: TextFormField(
+            decoration: const InputDecoration(
+              contentPadding: EdgeInsets.all(10),
+              border: OutlineInputBorder(),
+              label: Text("Nickname"),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'This field cannot be empty';
+              } else if (value.length > 5) {
+                return 'You cannot have more than 5 characters';
+              }
+              return null;
+            },
+            onSaved: (newValue) => nickName = newValue!.trim(),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => onSubmit(),
+          child: const Text("Enter chat room"),
+        ),
+      ],
     );
   }
 }

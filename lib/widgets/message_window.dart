@@ -1,4 +1,5 @@
 import 'package:ble_mqtt_app/models/message.dart';
+import 'package:ble_mqtt_app/utils/mqtt_helper.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
 import 'package:ble_mqtt_app/widgets/chat_bubble.dart';
 import 'package:flutter/material.dart';
@@ -8,12 +9,15 @@ class MessageWindow extends StatelessWidget {
     super.key,
     required this.messages,
     required this.mqttViewModel,
+    required this.nickName,
   });
 
   final List<String> messages;
   final MqttViewModel mqttViewModel;
+  final String nickName;
   static final _formKey = GlobalKey<FormState>();
   static String _enteredMessage = "";
+  static String uid = MqttHelper().mqttClientId;
 
   void submitForm(BuildContext context) {
     if (!_formKey.currentState!.validate()) {
@@ -23,8 +27,7 @@ class MessageWindow extends StatelessWidget {
     FocusScope.of(context).unfocus();
     _formKey.currentState!.reset();
 
-    final newMessage =
-        Message(messenger: Messenger.local, message: _enteredMessage);
+    final newMessage = Message(messenger: nickName, message: _enteredMessage);
     mqttViewModel.publishToTopics(
       "${newMessage.messenger}: ${newMessage.message}",
     );
@@ -57,14 +60,14 @@ class MessageWindow extends StatelessWidget {
                         bool isFirst = true;
                         int index = messages.length - i - 1;
                         var alignmentCondition =
-                            messages[index].contains("local");
+                            messages[index].contains(nickName);
 
                         if (alignmentCondition) {
                           isLocal = true;
                         }
                         if (index > 0) {
                           var uiCondition =
-                              messages[index - 1].contains("local");
+                              messages[index - 1].contains(nickName);
                           if (isLocal) {
                             if (uiCondition) {
                               isFirst = false;

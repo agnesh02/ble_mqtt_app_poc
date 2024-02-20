@@ -92,6 +92,7 @@ class MqttViewModel {
       mqttHelper.sampleTopic,
       MqttQos.atLeastOnce,
       builder.payload!,
+      retain: true,
     );
   }
 

@@ -1,4 +1,3 @@
-import 'package:ble_mqtt_app/models/message.dart';
 import 'package:flutter/material.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -16,17 +15,15 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     late List<String> formattedMsg;
-    if (message.contains("local")) {
-      formattedMsg = message.split(":");
-    } else {
-      formattedMsg = ["${Messenger.anonymous}", message];
-    }
+    formattedMsg = message.split(":");
+    String nickName = formattedMsg[0];
+    String msg = formattedMsg[1];
 
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
         !isMe && isFirstInSequence
-            ? ChatAvatar(isLocal: isMe)
+            ? SubWidget(nickName: nickName, isMe: isMe)
             : const SizedBox(width: 40),
         Flexible(
           child: Container(
@@ -42,7 +39,7 @@ class ChatBubble extends StatelessWidget {
               ),
             ),
             child: Text(
-              formattedMsg[1],
+              msg,
               overflow: TextOverflow.visible,
               style: TextStyle(
                 color: isMe ? Colors.white : Colors.black,
@@ -52,7 +49,7 @@ class ChatBubble extends StatelessWidget {
           ),
         ),
         isMe && isFirstInSequence
-            ? ChatAvatar(isLocal: isMe)
+            ? SubWidget(nickName: nickName, isMe: isMe)
             : const SizedBox(width: 40),
       ],
     );
@@ -67,7 +64,7 @@ class ChatAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
+      padding: const EdgeInsets.only(bottom: 2.0),
       child: CircleAvatar(
         backgroundColor: isLocal ? Colors.amber : Colors.indigo,
         child: Icon(
@@ -75,6 +72,28 @@ class ChatAvatar extends StatelessWidget {
           color: isLocal ? Colors.black : Colors.white,
         ),
       ),
+    );
+  }
+}
+
+class SubWidget extends StatelessWidget {
+  const SubWidget({
+    super.key,
+    required this.nickName,
+    required this.isMe,
+  });
+
+  final bool isMe;
+  final String nickName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        ChatAvatar(isLocal: isMe),
+        Text(nickName),
+      ],
     );
   }
 }

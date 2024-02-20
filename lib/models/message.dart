@@ -1,7 +1,7 @@
 class Message {
   Message({required this.messenger, required this.message});
 
-  final Messenger messenger;
+  final String messenger;
   final String message;
 }
 
