@@ -2,6 +2,7 @@
 
 import 'package:ble_mqtt_app/providers/connectivity_provider.dart';
 import 'package:ble_mqtt_app/providers/mqtt_providers.dart';
+import 'package:ble_mqtt_app/utils/network_manager.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
 import 'package:ble_mqtt_app/widgets/credentials_form.dart';
 import 'package:ble_mqtt_app/widgets/custom_snack.dart';
@@ -10,12 +11,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
-class MqttActivityScreen extends ConsumerWidget {
-  MqttActivityScreen({super.key});
+class MqttActivityScreen extends ConsumerStatefulWidget {
+  const MqttActivityScreen({super.key});
+
+  @override
+  ConsumerState<MqttActivityScreen> createState() => _MqttActivityScreenState();
+}
+
+class _MqttActivityScreenState extends ConsumerState<MqttActivityScreen> {
   final MqttViewModel mqttViewModel = MqttViewModel();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    NetworkManager().init(ref, context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentConnectionStatus = ref.watch(mqttConnectionProvider);
     final availableMessages = ref.watch(mqttMessagesProvider);
     final isConnected = ref.watch(connectivityProvider);

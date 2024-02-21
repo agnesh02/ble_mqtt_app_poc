@@ -51,5 +51,13 @@
 	<array>
 		<string>mqtt.tcp</string>
 	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>We need Bluetooth access to connect to BLE devices.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>We need Bluetooth access to connect to BLE devices.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to scan for BLE devices.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to scan for BLE devices.</string>
 </dict>
 </plist>
