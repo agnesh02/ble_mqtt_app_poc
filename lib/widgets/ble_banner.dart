@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -40,15 +42,22 @@ ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason> bleBanner(
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            scaffoldMessenger.clearMaterialBanners();
+            connectionStatusText == 'Turned OFF'
+                ? print("Attempting to turn on BLE")
+                : scaffoldMessenger.clearMaterialBanners();
           },
-          child: const Text(
-            'DISMISS',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: connectionStatusText == 'Turned OFF'
+              ? const Text(
+                  "Turn ON Bluetooth",
+                  style: TextStyle(color: Colors.white),
+                )
+              : const Text(
+                  'DISMISS',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
         ),
       ],
     ),

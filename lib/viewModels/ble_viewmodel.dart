@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+// ignore: unused_import
 import 'package:ble_mqtt_app/models/device_connection_state.dart';
 import 'package:ble_mqtt_app/providers/ble_provider.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -75,22 +76,24 @@ class BleViewModel {
     );
   }
 
-  void connectWithDevice(BluetoothDevice device, WidgetRef ref) async {
-    await FlutterBluePlus.stopScan();
-
+  Future<bool> connectWithDevice(BluetoothDevice device, WidgetRef ref) async {
+    await Future.delayed(const Duration(seconds: 1));
+    bool isConnectionSuccessful = false;
     var subscription =
         device.connectionState.listen((BluetoothConnectionState state) async {
       if (state == BluetoothConnectionState.connected) {
         print("Device Connected");
-        ref.read(bleStateProvider.notifier).updateConnectionState(
-              device.remoteId,
-              DeviceConnectionState.connected,
-            );
+        isConnectionSuccessful = true;
+        // ref.read(bleStateProvider.notifier).updateConnectionState(
+        //       device.remoteId,
+        //       DeviceConnectionState.connected,
+        //     );
       }
       if (state == BluetoothConnectionState.disconnected) {
         print(
-          "${device.disconnectReason!.code} ${device.disconnectReason!.description}",
+          "${device.advName} has been disconnected!!! -> ${device.disconnectReason!.code} ${device.disconnectReason!.description}",
         );
+        isConnectionSuccessful = false;
         ref.read(bleStateProvider.notifier).updateConnectionState(
               device.remoteId,
               DeviceConnectionState.disconnected,
@@ -100,8 +103,14 @@ class BleViewModel {
 
     device.cancelWhenDisconnected(subscription, delayed: true, next: true);
 
-    await device.connect();
+    await device
+        .connect(timeout: const Duration(seconds: 5))
+        .onError((error, stackTrace) {
+      print("ERROR: $error");
+      Future.delayed(const Duration(seconds: 1), () => subscription.cancel());
+    });
 
+    return isConnectionSuccessful;
     // await device.disconnect();
     // subscription.cancel();
   }
