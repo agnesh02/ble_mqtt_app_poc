@@ -43,7 +43,16 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
                 if (!isBleActive) {
                   return;
                 }
-                BleActivityScreen.bleViewModel.startScanning(ref);
+
+                await BleActivityScreen.bleViewModel
+                    .checkLocationHardwareStatus()
+                    .then((isAvailable) {
+                  if (!isAvailable) {
+                    customSnackBar(context, "Please turn on your location.");
+                  } else {
+                    BleActivityScreen.bleViewModel.startScanning(ref);
+                  }
+                });
               },
               child: SizedBox(
                 width: 95,
@@ -74,7 +83,10 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
             connectionState: deviceConnectionState,
             onNavigate: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (ctx) => const BleInteractionScreen(),
+                builder: (ctx) => BleInteractionScreen(
+                  device: bleDevice,
+                  index: index,
+                ),
               ),
             ),
             onConnect: () async {
@@ -99,17 +111,9 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
                   .connectWithDevice(bleDevice, ref)
                   .then((isSuccess) {
                 if (isSuccess) {
-                  ref.read(bleStateProvider.notifier).updateConnectionState(
-                        bleDevice.remoteId,
-                        DeviceConnectionState.connected,
-                      );
                   customSnackBar(context,
                       "Connected with ${bleDevice.advName} successfully :)");
                 } else {
-                  ref.read(bleStateProvider.notifier).updateConnectionState(
-                        bleDevice.remoteId,
-                        DeviceConnectionState.disconnected,
-                      );
                   customSnackBar(context,
                       "Failed to connect with ${bleDevice.advName} :(");
                 }

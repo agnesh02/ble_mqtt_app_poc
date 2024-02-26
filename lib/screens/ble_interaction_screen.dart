@@ -1,6 +1,13 @@
 // ignore_for_file: avoid_print
 
+import 'package:ble_mqtt_app/models/device_connection_state.dart';
+import 'package:ble_mqtt_app/providers/ble_provider.dart';
+import 'package:ble_mqtt_app/viewModels/ble_viewmodel.dart';
+import 'package:ble_mqtt_app/widgets/ble_device_header.dart';
+import 'package:ble_mqtt_app/widgets/custom_snack.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final elevatedButtonStyle = ElevatedButton.styleFrom(
   shape: RoundedRectangleBorder(
@@ -8,11 +15,20 @@ final elevatedButtonStyle = ElevatedButton.styleFrom(
   ),
 );
 
-class BleInteractionScreen extends StatelessWidget {
-  const BleInteractionScreen({super.key});
+class BleInteractionScreen extends ConsumerWidget {
+  const BleInteractionScreen({
+    super.key,
+    required this.device,
+    required this.index,
+  });
+
+  final BluetoothDevice device;
+  final int index;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bleState = ref.watch(bleStateProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("EDP Device"),
@@ -21,6 +37,30 @@ class BleInteractionScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 15.0),
         child: Column(
           children: [
+            const SizedBox(height: 20),
+            BleDeviceHeader(
+                deviceName: device.advName,
+                connectionState:
+                    bleState.availableBleDevices[index].connectionState,
+                deviceAddress: device.remoteId.toString(),
+                onReconnect: () async {
+                  print("Attempting reconnection...");
+                  ref.read(bleStateProvider.notifier).updateConnectionState(
+                        device.remoteId,
+                        DeviceConnectionState.connecting,
+                      );
+                  await BleViewModel()
+                      .connectWithDevice(device, ref)
+                      .then((isSuccess) {
+                    if (isSuccess) {
+                      customSnackBar(context,
+                          "Reconnected with ${device.advName} successfully :)");
+                    } else {
+                      customSnackBar(context,
+                          "Failed to reconnect with ${device.advName} :(");
+                    }
+                  });
+                }),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -31,7 +71,9 @@ class BleInteractionScreen extends StatelessWidget {
                 ),
                 ElevatedButton(
                   style: elevatedButtonStyle,
-                  onPressed: () {},
+                  onPressed: () {
+                    BleViewModel().discoverServices(device);
+                  },
                   child: const Text("Check"),
                 )
               ],

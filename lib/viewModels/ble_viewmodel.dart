@@ -3,8 +3,10 @@
 // ignore: unused_import
 import 'package:ble_mqtt_app/models/device_connection_state.dart';
 import 'package:ble_mqtt_app/providers/ble_provider.dart';
+import 'package:ble_mqtt_app/utils/ble_operations_helper.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class BleViewModel {
@@ -36,6 +38,11 @@ class BleViewModel {
       permissionsGranted = true;
     }
     return permissionsGranted;
+  }
+
+  Future<bool> checkLocationHardwareStatus() async {
+    var isServiceEnabled = await Geolocator.isLocationServiceEnabled();
+    return isServiceEnabled;
   }
 
   void startScanning(WidgetRef ref) async {
@@ -84,10 +91,10 @@ class BleViewModel {
       if (state == BluetoothConnectionState.connected) {
         print("Device Connected");
         isConnectionSuccessful = true;
-        // ref.read(bleStateProvider.notifier).updateConnectionState(
-        //       device.remoteId,
-        //       DeviceConnectionState.connected,
-        //     );
+        ref.read(bleStateProvider.notifier).updateConnectionState(
+              device.remoteId,
+              DeviceConnectionState.connected,
+            );
       }
       if (state == BluetoothConnectionState.disconnected) {
         print(
@@ -107,11 +114,50 @@ class BleViewModel {
         .connect(timeout: const Duration(seconds: 5))
         .onError((error, stackTrace) {
       print("ERROR: $error");
-      Future.delayed(const Duration(seconds: 1), () => subscription.cancel());
+      // Future.delayed(const Duration(seconds: 1), () => subscription.cancel());
     });
 
     return isConnectionSuccessful;
     // await device.disconnect();
     // subscription.cancel();
+  }
+
+  Future<void> discoverServices(BluetoothDevice device) async {
+    // Note: You must call discoverServices after every re-connection!
+    List<BluetoothService> services = await device.discoverServices();
+
+    for (var service in services) {
+      if (service.uuid.toString() == "f000ee00-0451-4000-b000-000000000000") {
+        for (BluetoothCharacteristic c in service.characteristics) {
+          if (c.characteristicUuid.toString() ==
+              "f000ee03-0451-4000-b000-000000000000") {
+            device.createBond();
+            List<int> value = await c.read();
+            print(value);
+          }
+          if (c.characteristicUuid.toString() ==
+              "f000ee07-0451-4000-b000-000000000000") {
+            final subscription = c.onValueReceived.listen((value) {
+              print(value);
+            });
+
+            device.cancelWhenDisconnected(subscription);
+            await c.setNotifyValue(true);
+
+            List<int> therapyScheduleData =
+                BleOperationsHelper().generateTherapySchedulePacketFrame(
+              slotNumber: 1,
+              durationInMinutes: 20,
+            );
+
+            await c.write(therapyScheduleData);
+
+            Future.delayed(Duration(seconds: 2), () async {
+              await c.write([0xA5, 0x00, 0x24, 0x00, 0x00]);
+            });
+          }
+        }
+      }
+    }
   }
 }
