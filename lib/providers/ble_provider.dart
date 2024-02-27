@@ -1,4 +1,5 @@
 import 'package:ble_mqtt_app/models/device_connection_state.dart';
+import 'package:ble_mqtt_app/models/edp_parameters.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -83,3 +84,7 @@ final bleStateProvider = StateNotifierProvider<BleStateNotifier, BleState>(
 );
 
 final bleHardwareProvider = StateProvider((ref) => false);
+
+final eliraParametersProvider = StateProvider(
+  (ref) => EdpParameters(battery: "0", temperature: "0", amplitude: "0"),
+);

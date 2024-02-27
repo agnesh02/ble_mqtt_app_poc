@@ -5,6 +5,7 @@ import 'package:ble_mqtt_app/providers/ble_provider.dart';
 import 'package:ble_mqtt_app/viewModels/ble_viewmodel.dart';
 import 'package:ble_mqtt_app/widgets/ble_device_header.dart';
 import 'package:ble_mqtt_app/widgets/custom_snack.dart';
+import 'package:ble_mqtt_app/widgets/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,7 @@ class BleInteractionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bleState = ref.watch(bleStateProvider);
+    final edpParameters = ref.watch(eliraParametersProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -71,8 +73,20 @@ class BleInteractionScreen extends ConsumerWidget {
                 ),
                 ElevatedButton(
                   style: elevatedButtonStyle,
-                  onPressed: () {
-                    BleViewModel().discoverServices(device);
+                  onPressed: () async {
+                    showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (cntxt) => processingDialog(),
+                    );
+
+                    await BleViewModel()
+                        .checkDeviceParameters(device)
+                        .then((result) {
+                      ref.read(eliraParametersProvider.notifier).state = result;
+                      print(result.toString());
+                      Navigator.of(context).pop();
+                    });
                   },
                   child: const Text("Check"),
                 )
@@ -84,13 +98,19 @@ class BleInteractionScreen extends ConsumerWidget {
                 border: Border.all(width: 1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  ParameterRow(title: "Battery Voltage", data: "0"),
-                  ParameterRow(title: "Temperature", data: "0"),
+                  ParameterRow(
+                    title: "Battery Voltage",
+                    data: edpParameters.battery,
+                  ),
+                  ParameterRow(
+                    title: "Temperature",
+                    data: edpParameters.temperature,
+                  ),
                   ParameterRow(
                     title: "Amplitude",
-                    data: "0",
+                    data: edpParameters.amplitude,
                     bottomBorder: false,
                   ),
                 ],
@@ -105,8 +125,24 @@ class BleInteractionScreen extends ConsumerWidget {
             ),
             CommandButton(
               title: "Set Therapy Schedules",
-              onClick: () {
+              onClick: () async {
                 print("Command 2");
+
+                showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (cntxt) => pickTimeDialog(
+                    context,
+                    ref,
+                    (startTime, duration) {
+                      final now = DateTime.now();
+                      final time = DateTime(now.year, now.month, now.day,
+                          startTime.hour, startTime.minute);
+                      print(time);
+                      BleViewModel().scheduleTherapy(device, time, duration);
+                    },
+                  ),
+                );
               },
             ),
             CommandButton(
@@ -180,4 +216,17 @@ class CommandButton extends StatelessWidget {
       ),
     );
   }
+}
+
+AlertDialog processingDialog() {
+  return const AlertDialog(
+    title: Text("Processing", textAlign: TextAlign.center),
+    content: SizedBox(
+      height: 100,
+      width: 100,
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+    ),
+  );
 }

@@ -89,6 +89,9 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
                 ),
               ),
             ),
+            onDisconnect: () {
+              bleDevice.disconnect();
+            },
             onConnect: () async {
               if (deviceConnectionState == DeviceConnectionState.connected) {
                 customSnackBar(

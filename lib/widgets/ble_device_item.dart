@@ -10,12 +10,14 @@ class BleDeviceItem extends StatelessWidget {
     required this.connectionState,
     required this.deviceAddress,
     required this.onConnect,
+    required this.onDisconnect,
     required this.onNavigate,
   });
 
   final String deviceName;
   final String deviceAddress;
   final void Function() onConnect;
+  final void Function() onDisconnect;
   final void Function() onNavigate;
   final DeviceConnectionState connectionState;
 
@@ -64,6 +66,10 @@ class BleDeviceItem extends StatelessWidget {
                 onPressed: () {
                   print(deviceName);
                   onNavigate();
+                },
+                onLongPress: () {
+                  print("Disconnecting device");
+                  onDisconnect();
                 },
                 child: const Text("Navigate"),
               )

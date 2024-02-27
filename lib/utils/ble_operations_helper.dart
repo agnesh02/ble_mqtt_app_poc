@@ -11,6 +11,7 @@ class BleOperationsHelper {
   List<int> generateTherapySchedulePacketFrame({
     required int slotNumber,
     required int durationInMinutes,
+    required DateTime startTime,
   }) {
     List<int> packetFrame = [];
 
@@ -19,22 +20,20 @@ class BleOperationsHelper {
     packetFrame.add(0x20);
     packetFrame.add(slotNumber);
 
-    List<int> timeAsBytes = convertTimeToBytes();
+    List<int> timeAsBytes = convertTimeToBytes(startTime);
     for (var i in timeAsBytes) {
       packetFrame.add(i);
     }
     packetFrame.add(durationInMinutes);
     packetFrame.add(0x00);
 
-    print('Epoch Time: $packetFrame');
     print(packetFrame);
     convertBytesToTime(timeAsBytes);
 
     return packetFrame;
   }
 
-  List<int> convertTimeToBytes() {
-    DateTime time = DateTime.now();
+  List<int> convertTimeToBytes(DateTime time) {
     int epochTime = time.millisecondsSinceEpoch ~/ 1000;
     List<int> epochBytes = [];
     while (epochTime > 0) {
@@ -58,3 +57,9 @@ class BleOperationsHelper {
     print('DateTime: $dateTime');
   }
 }
+
+const uuidEdpService = "f000ee00-0451-4000-b000-000000000000";
+const uuidBatteryVoltage = "f000ee03-0451-4000-b000-000000000000";
+const uuidAmplitude = "f000ee04-0451-4000-b000-000000000000";
+const uuidTemperature = "f000ee01-0451-4000-b000-000000000000";
+const uuidCommandAndResponse = "f000ee07-0451-4000-b000-000000000000";

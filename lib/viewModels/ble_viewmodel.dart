@@ -1,7 +1,10 @@
 // ignore_for_file: avoid_print
 
 // ignore: unused_import
+import 'dart:math';
+
 import 'package:ble_mqtt_app/models/device_connection_state.dart';
+import 'package:ble_mqtt_app/models/edp_parameters.dart';
 import 'package:ble_mqtt_app/providers/ble_provider.dart';
 import 'package:ble_mqtt_app/utils/ble_operations_helper.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -90,11 +93,24 @@ class BleViewModel {
         device.connectionState.listen((BluetoothConnectionState state) async {
       if (state == BluetoothConnectionState.connected) {
         print("Device Connected");
-        isConnectionSuccessful = true;
-        ref.read(bleStateProvider.notifier).updateConnectionState(
-              device.remoteId,
-              DeviceConnectionState.connected,
-            );
+        print("Bonding with the device");
+
+        final services = await device.discoverServices();
+        for (var service in services) {
+          if (service.uuid.toString() == uuidEdpService) {
+            for (BluetoothCharacteristic c in service.characteristics) {
+              if (c.characteristicUuid.toString() == uuidBatteryVoltage) {
+                List<int> value = await c.read(timeout: 40);
+                print(value);
+                isConnectionSuccessful = true;
+                ref.read(bleStateProvider.notifier).updateConnectionState(
+                      device.remoteId,
+                      DeviceConnectionState.connected,
+                    );
+              }
+            }
+          }
+        }
       }
       if (state == BluetoothConnectionState.disconnected) {
         print(
@@ -111,53 +127,79 @@ class BleViewModel {
     device.cancelWhenDisconnected(subscription, delayed: true, next: true);
 
     await device
-        .connect(timeout: const Duration(seconds: 5))
+        .connect(timeout: const Duration(seconds: 10))
         .onError((error, stackTrace) {
       print("ERROR: $error");
-      // Future.delayed(const Duration(seconds: 1), () => subscription.cancel());
     });
 
     return isConnectionSuccessful;
-    // await device.disconnect();
-    // subscription.cancel();
   }
 
-  Future<void> discoverServices(BluetoothDevice device) async {
-    // Note: You must call discoverServices after every re-connection!
+  Future<void> scheduleTherapy(
+      BluetoothDevice device, DateTime startTime, int duration) async {
     List<BluetoothService> services = await device.discoverServices();
 
     for (var service in services) {
-      if (service.uuid.toString() == "f000ee00-0451-4000-b000-000000000000") {
+      if (service.uuid.toString() == uuidEdpService) {
         for (BluetoothCharacteristic c in service.characteristics) {
-          if (c.characteristicUuid.toString() ==
-              "f000ee03-0451-4000-b000-000000000000") {
-            device.createBond();
-            List<int> value = await c.read();
-            print(value);
-          }
-          if (c.characteristicUuid.toString() ==
-              "f000ee07-0451-4000-b000-000000000000") {
+          // Listening to command and responses data
+          if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
             final subscription = c.onValueReceived.listen((value) {
               print(value);
             });
-
             device.cancelWhenDisconnected(subscription);
             await c.setNotifyValue(true);
 
+            // Setting a new therapy schedule
             List<int> therapyScheduleData =
                 BleOperationsHelper().generateTherapySchedulePacketFrame(
               slotNumber: 1,
-              durationInMinutes: 20,
+              durationInMinutes: duration,
+              startTime: startTime,
             );
-
             await c.write(therapyScheduleData);
 
-            Future.delayed(Duration(seconds: 2), () async {
+            // Retrieving scheduled therapies
+            Future.delayed(const Duration(seconds: 2), () async {
               await c.write([0xA5, 0x00, 0x24, 0x00, 0x00]);
             });
           }
         }
       }
     }
+  }
+
+  Future<EdpParameters> checkDeviceParameters(BluetoothDevice device) async {
+    EdpParameters edpParameters = EdpParameters(
+      battery: "0",
+      temperature: "0",
+      amplitude: "0",
+    );
+    List<BluetoothService> services = await device.discoverServices();
+    for (var service in services) {
+      if (service.uuid.toString() == uuidEdpService) {
+        for (BluetoothCharacteristic charac in service.characteristics) {
+          String characUUID = charac.characteristicUuid.toString();
+          switch (characUUID) {
+            case uuidBatteryVoltage:
+              List<int> data = await charac.read();
+              edpParameters.battery = "${data[0] / 10}V";
+              break;
+            case uuidTemperature:
+              List<int> data = await charac.read();
+              edpParameters.temperature = "${data[0]}°C";
+              break;
+            case uuidAmplitude:
+              List<int> data = await charac.read();
+              edpParameters.amplitude = "${data[0]}mA";
+              break;
+            default:
+              // Handle default case if needed
+              break;
+          }
+        }
+      }
+    }
+    return edpParameters;
   }
 }
