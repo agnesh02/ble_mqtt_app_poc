@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:ble_mqtt_app/models/device_connection_state.dart';
 import 'package:ble_mqtt_app/models/edp_parameters.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -83,8 +85,10 @@ final bleStateProvider = StateNotifierProvider<BleStateNotifier, BleState>(
   (ref) => BleStateNotifier(),
 );
 
-final bleHardwareProvider = StateProvider((ref) => false);
+final bleHardwareProvider = StateProvider<bool>((ref) => false);
 
-final eliraParametersProvider = StateProvider(
+final eliraParametersProvider = StateProvider<EdpParameters>(
   (ref) => EdpParameters(battery: "0", temperature: "0", amplitude: "0"),
 );
+
+final edpServiceProvider = StateProvider<BluetoothService?>((ref) => null);

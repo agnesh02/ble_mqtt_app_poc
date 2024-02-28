@@ -44,7 +44,7 @@ class BleOperationsHelper {
     return epochBytes;
   }
 
-  void convertBytesToTime(List<int> data) {
+  DateTime convertBytesToTime(List<int> data) {
     // List<int> epochBytes = [101, 220, 132, 100];
     List<int> epochBytes = data;
     int epochTime = 0;
@@ -53,8 +53,9 @@ class BleOperationsHelper {
     }
 
     DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(epochTime * 1000);
-
     print('DateTime: $dateTime');
+
+    return dateTime;
   }
 }
 
