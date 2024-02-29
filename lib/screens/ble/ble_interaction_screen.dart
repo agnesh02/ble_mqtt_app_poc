@@ -59,7 +59,9 @@ class _BleInteractionScreenState extends ConsumerState<BleInteractionScreen> {
             "Reconnected with ${widget.device.advName} successfully :)");
       } else {
         customSnackBar(
-            context, "Failed to reconnect with ${widget.device.advName} :(");
+          context,
+          "Pairing unsuccessful or Failed to reconnect with ${widget.device.advName} :(",
+        );
       }
     });
   }

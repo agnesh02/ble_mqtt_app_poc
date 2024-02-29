@@ -15,7 +15,11 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     late List<String> formattedMsg;
-    formattedMsg = message.split(":");
+    String messageData = message;
+    if (!messageData.contains(":")) {
+      messageData = "Server:$message";
+    }
+    formattedMsg = messageData.split(":");
     String nickName = formattedMsg[0];
     String msg = formattedMsg[1];
 

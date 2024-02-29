@@ -10,6 +10,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+class PermissionStatus {
+  PermissionStatus({
+    required this.isAllGranted,
+    required this.deniedPermissions,
+  });
+
+  final bool isAllGranted;
+  final List<Permission> deniedPermissions;
+}
+
 class BleViewModel {
   BleViewModel._();
 
@@ -27,14 +37,35 @@ class BleViewModel {
   }
 
   /// Function which checks if all the necessary permissions are available or not
-  Future<bool> checkForPermissions() async {
+  Future<PermissionStatus> checkForPermissions() async {
     bool permissionsGranted = false;
-    if (await Permission.locationWhenInUse.request().isGranted &&
-        await Permission.bluetoothScan.request().isGranted &&
-        await Permission.bluetoothConnect.request().isGranted) {
+    List<Permission> deniedPermissions = [];
+    final locationPermissionStatus =
+        await Permission.locationWhenInUse.request();
+    final bluetoothScanPermissionStatus =
+        await Permission.bluetoothScan.request();
+    final bluetoothConnectPermissionStatus =
+        await Permission.bluetoothConnect.request();
+
+    if (locationPermissionStatus.isGranted &&
+        bluetoothScanPermissionStatus.isGranted &&
+        bluetoothConnectPermissionStatus.isGranted) {
       permissionsGranted = true;
+    } else {
+      if (!locationPermissionStatus.isGranted) {
+        deniedPermissions.add(Permission.locationWhenInUse);
+      }
+      if (!bluetoothScanPermissionStatus.isGranted) {
+        deniedPermissions.add(Permission.bluetoothScan);
+      }
+      if (!bluetoothConnectPermissionStatus.isGranted) {
+        deniedPermissions.add(Permission.bluetoothConnect);
+      }
     }
-    return permissionsGranted;
+    return PermissionStatus(
+      isAllGranted: permissionsGranted,
+      deniedPermissions: deniedPermissions,
+    );
   }
 
   /// Function which checks if location hardware is turned on or not
@@ -51,11 +82,11 @@ class BleViewModel {
       return;
     }
     print("Attempting BLE scan...");
-    bool permissionsGranted = await checkForPermissions();
-    if (!permissionsGranted) {
-      print("insufficient permissions");
-      return;
-    }
+    // bool permissionsGranted = await checkForPermissions();
+    // if (!permissionsGranted) {
+    //   print("insufficient permissions");
+    //   return;
+    // }
 
     // Listening to the scan results to update the list
     var subscription = FlutterBluePlus.onScanResults.listen(
@@ -141,13 +172,13 @@ class BleViewModel {
           );
     });
 
-    // FlutterBluePlus.events.onMtuChanged.listen((event) {
-    //   print("MTU changed................ ${event.mtu}");
-    //   ref.read(bleStateProvider.notifier).updateConnectionState(
-    //         device.remoteId,
-    //         DeviceConnectionState.connecting,
-    //       );
-    // });
+    FlutterBluePlus.events.onMtuChanged.listen((event) {
+      print("MTU changed................ ${event.mtu}");
+      ref.read(bleStateProvider.notifier).updateConnectionState(
+            device.remoteId,
+            DeviceConnectionState.connecting,
+          );
+    });
 
     device.cancelWhenDisconnected(subscription, delayed: true, next: true);
 

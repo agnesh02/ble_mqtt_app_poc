@@ -10,6 +10,7 @@ import 'package:ble_mqtt_app/widgets/common/custom_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class BleActivityScreen extends ConsumerStatefulWidget {
   const BleActivityScreen({super.key});
@@ -60,13 +61,21 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
           )
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        itemCount: bleState.availableBleDevices.length,
-        itemBuilder: (cntxt, index) {
-          return _buildDeviceItem(index);
-        },
-      ),
+      body: bleState.availableBleDevices.isEmpty
+          ? const Center(
+              child: Text(
+                "No devices found\n:(",
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              itemCount: bleState.availableBleDevices.length,
+              itemBuilder: (cntxt, index) {
+                return _buildDeviceItem(index);
+              },
+            ),
     );
   }
 
@@ -74,11 +83,24 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
   void _startScanning() async {
     await BleActivityScreen.bleViewModel
         .checkLocationHardwareStatus()
-        .then((isAvailable) {
+        .then((isAvailable) async {
       if (!isAvailable) {
         customSnackBar(context, "Please turn on your location.");
       } else {
+        requestForPermissionsAndStartScanning();
+      }
+    });
+  }
+
+  // Function which handles the permission state
+  // and proceed with the scan operation if all permissions are found
+  void requestForPermissionsAndStartScanning() async {
+    await BleViewModel().checkForPermissions().then((result) {
+      if (result.isAllGranted) {
         BleActivityScreen.bleViewModel.startScanning(ref);
+      } else {
+        showDialog(
+            context: context, builder: (context) => dialogOnPermissionDenied());
       }
     });
   }
@@ -116,7 +138,10 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
         customSnackBar(
             context, "Connected with ${device.advName} successfully :)");
       } else {
-        customSnackBar(context, "Failed to connect with ${device.advName} :(");
+        customSnackBar(
+          context,
+          "Pairing unsuccessful or Failed to connect with ${device.advName} :(",
+        );
       }
     });
   }
@@ -145,6 +170,55 @@ class _BleActivityScreenState extends ConsumerState<BleActivityScreen> {
       onConnect: () async {
         _connectWithDevice(bleDevice, deviceConnectionState);
       },
+    );
+  }
+
+  /// Returns a dialog which is to be shown to the user
+  /// when the requested permissions are denied
+  AlertDialog dialogOnPermissionDenied() {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Text(
+            'Permissions Required ',
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 20,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(bottom: 8.5),
+            child: Icon(Icons.warning_amber_rounded, size: 30),
+          )
+        ],
+      ),
+      content: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Please grant the following permissions from your settings to proceed:',
+            style: TextStyle(fontWeight: FontWeight.w400),
+          ),
+          Text(
+            '\nLocation, Nearby devices',
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => openAppSettings(),
+          child: const Text('Go to settings'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('OK'),
+        ),
+      ],
     );
   }
 }

@@ -101,7 +101,7 @@ final bleHardwareProvider = StateProvider<bool>((ref) => false);
 /// Provider which holds the basic parameters of the Elira device.
 /// The data comes under 'Device Parameters'
 final eliraParametersProvider = StateProvider<EdpParameters>(
-  (ref) => EdpParameters(battery: "0", temperature: "0", amplitude: "0"),
+  (ref) => EdpParameters(battery: "--", temperature: "--", amplitude: "--"),
 );
 
 /// Provider which is holds the [edpService] (The actual service from the Elira device which we need for all the functionalities)
