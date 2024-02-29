@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+/// Class which helps in providing some additional functions needed for BLE operations
 class BleOperationsHelper {
   BleOperationsHelper._();
   static final _instance = BleOperationsHelper._();
@@ -8,6 +9,8 @@ class BleOperationsHelper {
     return _instance;
   }
 
+  /// Function which takes the data from the app to
+  /// generate a packet frame as required by the EDP
   List<int> generateTherapySchedulePacketFrame({
     required int slotNumber,
     required int durationInMinutes,
@@ -33,6 +36,8 @@ class BleOperationsHelper {
     return packetFrame;
   }
 
+  /// Function which is used to convert the time to epoch time
+  /// and then into bytes as required by the EDP device
   List<int> convertTimeToBytes(DateTime time) {
     int epochTime = time.millisecondsSinceEpoch ~/ 1000;
     List<int> epochBytes = [];
@@ -44,6 +49,8 @@ class BleOperationsHelper {
     return epochBytes;
   }
 
+  /// Function which is used to convert back the bytes received from the EDP device
+  /// as epoch time and then back into a DateTime format
   DateTime convertBytesToTime(List<int> data) {
     // List<int> epochBytes = [101, 220, 132, 100];
     List<int> epochBytes = data;

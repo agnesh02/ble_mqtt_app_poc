@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 
 var uuid = const Uuid();
 
+/// Class which helps us in setting up the Mqtt client initially
+/// Also helps us to access the [mqttClient] for our operations
 class MqttHelper {
   MqttHelper._();
 
@@ -22,6 +24,7 @@ class MqttHelper {
   String mqttClientId = uuid.v4();
   String sampleTopic = "topic/sampleTopic";
 
+  /// Function which is used to set up and mqtt client with predefined properties
   MqttServerClient initializeMqttClient() {
     mqttClient = MqttServerClient.withPort(
       mqttBrokerHost,

@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
-import 'package:ble_mqtt_app/providers/ble_provider.dart';
-import 'package:ble_mqtt_app/widgets/ble_banner.dart';
+import 'package:ble_mqtt_app/providers/ble/ble_provider.dart';
+import 'package:ble_mqtt_app/widgets/ble/ble_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +15,7 @@ class BleHardwareManager {
     return _instance;
   }
 
+  /// Listens to BLE hardware state (ON/OFF)
   void init(WidgetRef ref, BuildContext context) {
     print("Subscribing to BLE hardware state");
     FlutterBluePlus.adapterState.listen((event) {

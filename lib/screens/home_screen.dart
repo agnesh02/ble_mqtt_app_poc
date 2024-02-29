@@ -1,7 +1,7 @@
-import 'package:ble_mqtt_app/screens/ble_activity_screen.dart';
-import 'package:ble_mqtt_app/screens/mqtt_activity_screen.dart';
-import 'package:ble_mqtt_app/utils/connection_mode.dart';
-import 'package:ble_mqtt_app/widgets/functionality_selection.dart';
+import 'package:ble_mqtt_app/screens/ble/ble_activity_screen.dart';
+import 'package:ble_mqtt_app/screens/mqtt/mqtt_activity_screen.dart';
+import 'package:ble_mqtt_app/utils/mqtt/connection_mode.dart';
+import 'package:ble_mqtt_app/widgets/common/functionality_selection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,7 +22,7 @@ class HomeScreen extends ConsumerWidget {
             onFunctionalitySelected: (mode) {
               Widget preferredScreen = const BleActivityScreen();
               if (mode == ConnectionMode.mqtt) {
-                preferredScreen = MqttActivityScreen();
+                preferredScreen = const MqttActivityScreen();
               }
               Navigator.of(context).push(
                 MaterialPageRoute(

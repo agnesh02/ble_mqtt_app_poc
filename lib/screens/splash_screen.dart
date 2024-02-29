@@ -37,6 +37,47 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  Widget topSection() {
+    return SizedBox(
+      width: double.infinity,
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 30),
+            child: Image.asset(
+              'assets/images/logo-2.png',
+              width: 200,
+            ),
+          ),
+          const Positioned(
+            left: 240,
+            top: 50,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Multi",
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400),
+                ),
+                Text(
+                  "Comms",
+                  style: TextStyle(
+                      fontSize: 27,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,44 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 30),
-                    child: Image.asset(
-                      'assets/images/logo-2.png',
-                      width: 200,
-                    ),
-                  ),
-                  const Positioned(
-                    left: 240,
-                    top: 50,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Multi",
-                          style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400),
-                        ),
-                        Text(
-                          "Comms",
-                          style: TextStyle(
-                              fontSize: 27,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+            topSection(),
             const Spacer(),
             const Align(
               alignment: Alignment.center,

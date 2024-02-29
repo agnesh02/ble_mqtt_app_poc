@@ -1,7 +1,7 @@
-import 'package:ble_mqtt_app/models/message.dart';
-import 'package:ble_mqtt_app/utils/mqtt_helper.dart';
+import 'package:ble_mqtt_app/models/mqtt/message.dart';
+import 'package:ble_mqtt_app/utils/mqtt/mqtt_helper.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
-import 'package:ble_mqtt_app/widgets/chat_bubble.dart';
+import 'package:ble_mqtt_app/widgets/mqtt/chat_bubble.dart';
 import 'package:flutter/material.dart';
 
 class MessageWindow extends StatelessWidget {

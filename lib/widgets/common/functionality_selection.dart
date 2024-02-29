@@ -1,4 +1,4 @@
-import 'package:ble_mqtt_app/utils/connection_mode.dart';
+import 'package:ble_mqtt_app/utils/mqtt/connection_mode.dart';
 import 'package:flutter/material.dart';
 
 class FunctionalitySelection extends StatelessWidget {

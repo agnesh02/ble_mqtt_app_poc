@@ -1,3 +1,5 @@
+/// Class which represents the message format
+/// Helps to identify he sender and receiver
 class Message {
   Message({required this.messenger, required this.message});
 
@@ -5,4 +7,4 @@ class Message {
   final String message;
 }
 
-enum Messenger { local, anonymous }
+// enum Messenger { local, anonymous }

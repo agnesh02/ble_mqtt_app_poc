@@ -1,7 +1,8 @@
-import 'package:ble_mqtt_app/utils/ble_operations_helper.dart';
+import 'package:ble_mqtt_app/utils/ble/ble_operations_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+/// Class which holds the actual data of a therapy, start time and the duration
 class TherapyData {
   TherapyData({
     this.time,
@@ -34,6 +35,8 @@ class TherapyData {
   }
 }
 
+/// Class which represent all the 4 therapy slots which have its own [TherapyData]
+/// Used to manage the sate
 class TherapySchedules {
   TherapySchedules({
     required this.slot1,
@@ -59,6 +62,8 @@ class ScheduledTherapiesNotifier extends StateNotifier<TherapySchedules> {
           ),
         );
 
+  /// Function which is used to update a slot inside [TherapySchedules] class
+  /// Results in updating the state and show it to the user
   void updateSlot(int slotNumber, List<int> slotData) {
     final timeInSlot =
         BleOperationsHelper().convertBytesToTime(slotData.sublist(4, 8));
@@ -67,42 +72,51 @@ class ScheduledTherapiesNotifier extends StateNotifier<TherapySchedules> {
     final therapyData = TherapyData(time: timeInSlot, duration: durationInSlot);
     late TherapySchedules newTherapySchedulesObj;
 
-    switch (slotNumber) {
-      case 1:
-        newTherapySchedulesObj = TherapySchedules(
-          slot1: therapyData,
-          slot2: state.slot2,
-          slot3: state.slot3,
-          slot4: state.slot4,
-        );
-        break;
-      case 2:
-        newTherapySchedulesObj = TherapySchedules(
-          slot1: state.slot1,
-          slot2: therapyData,
-          slot3: state.slot3,
-          slot4: state.slot4,
-        );
-        break;
-      case 3:
-        newTherapySchedulesObj = TherapySchedules(
-          slot1: state.slot1,
-          slot2: state.slot2,
-          slot3: therapyData,
-          slot4: state.slot4,
-        );
-        break;
+    newTherapySchedulesObj = TherapySchedules(
+      slot1: slotNumber == 1 ? therapyData : state.slot1,
+      slot2: slotNumber == 2 ? therapyData : state.slot2,
+      slot3: slotNumber == 3 ? therapyData : state.slot3,
+      slot4: slotNumber == 4 ? therapyData : state.slot4,
+    );
 
-      case 4:
-        newTherapySchedulesObj = TherapySchedules(
-          slot1: state.slot1,
-          slot2: state.slot2,
-          slot3: state.slot3,
-          slot4: therapyData,
-        );
-        break;
-    }
     state = newTherapySchedulesObj;
+
+    // switch (slotNumber) {
+    //   case 1:
+    //     newTherapySchedulesObj = TherapySchedules(
+    //       slot1: therapyData,
+    //       slot2: state.slot2,
+    //       slot3: state.slot3,
+    //       slot4: state.slot4,
+    //     );
+    //     break;
+    //   case 2:
+    //     newTherapySchedulesObj = TherapySchedules(
+    //       slot1: state.slot1,
+    //       slot2: therapyData,
+    //       slot3: state.slot3,
+    //       slot4: state.slot4,
+    //     );
+    //     break;
+    //   case 3:
+    //     newTherapySchedulesObj = TherapySchedules(
+    //       slot1: state.slot1,
+    //       slot2: state.slot2,
+    //       slot3: therapyData,
+    //       slot4: state.slot4,
+    //     );
+    //     break;
+
+    //   case 4:
+    //     newTherapySchedulesObj = TherapySchedules(
+    //       slot1: state.slot1,
+    //       slot2: state.slot2,
+    //       slot3: state.slot3,
+    //       slot4: therapyData,
+    //     );
+    //     break;
+    // }
+    // state = newTherapySchedulesObj;
   }
 
   // void assignFetchedTherapySchedules(
@@ -133,6 +147,7 @@ class ScheduledTherapiesNotifier extends StateNotifier<TherapySchedules> {
   // }
 }
 
+/// Provider which is used for 'show therapy schedules'
 final scheduledTherapiesProvider =
     StateNotifierProvider<ScheduledTherapiesNotifier, TherapySchedules>(
   (ref) => ScheduledTherapiesNotifier(),

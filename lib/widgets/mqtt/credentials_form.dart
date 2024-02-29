@@ -1,6 +1,6 @@
-import 'package:ble_mqtt_app/providers/connectivity_provider.dart';
+import 'package:ble_mqtt_app/providers/mqtt/connectivity_provider.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
-import 'package:ble_mqtt_app/widgets/custom_snack.dart';
+import 'package:ble_mqtt_app/widgets/common/custom_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

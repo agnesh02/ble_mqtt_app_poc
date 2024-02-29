@@ -1,3 +1,4 @@
+/// Class which holds the basic device data which comes under 'Device Parameters'
 class EdpParameters {
   EdpParameters({
     required this.battery,

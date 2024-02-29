@@ -1,11 +1,14 @@
 {
     "cSpell.words": [
+        "agnesh",
         "ARGB",
         "charac",
+        "Comms",
         "elira",
         "Geolocator",
         "hivemq",
         "MQTT",
+        "mqttclient",
         "riverpod",
         "Rssi",
         "sublist",

@@ -1,18 +1,18 @@
 // ignore_for_file: avoid_print
 
-import 'package:ble_mqtt_app/providers/connectivity_provider.dart';
-import 'package:ble_mqtt_app/providers/mqtt_providers.dart';
-import 'package:ble_mqtt_app/utils/network_manager.dart';
+import 'package:ble_mqtt_app/providers/mqtt/connectivity_provider.dart';
+import 'package:ble_mqtt_app/providers/mqtt/mqtt_providers.dart';
+import 'package:ble_mqtt_app/utils/mqtt/network_manager.dart';
 import 'package:ble_mqtt_app/viewModels/mqtt_viewmodel.dart';
-import 'package:ble_mqtt_app/widgets/credentials_form.dart';
-import 'package:ble_mqtt_app/widgets/custom_snack.dart';
-import 'package:ble_mqtt_app/widgets/message_window.dart';
+import 'package:ble_mqtt_app/widgets/common/custom_snack.dart';
+import 'package:ble_mqtt_app/widgets/mqtt/credentials_form.dart';
+import 'package:ble_mqtt_app/widgets/mqtt/message_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
 class MqttActivityScreen extends ConsumerStatefulWidget {
-  const MqttActivityScreen({super.key});
+  const MqttActivityScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<MqttActivityScreen> createState() => _MqttActivityScreenState();
@@ -68,21 +68,19 @@ class _MqttActivityScreenState extends ConsumerState<MqttActivityScreen> {
                       mqttViewModel: mqttViewModel,
                       onSubmitted: (username, password) async {
                         showDialog(
-                            context: context,
-                            builder: (cntxt) {
-                              return connectingDialog();
-                            });
-                        // mqttViewModel.connectMqttClient("admin", "admin123456");
+                          context: context,
+                          builder: (cntxt) => connectingDialog(),
+                        );
                         await mqttViewModel
                             .connectMqttClient(ref, username, password)
                             .then((isSuccess) {
                           Navigator.of(context).pop();
                           if (isSuccess) {
                             showDialog(
-                                context: context,
-                                builder: (cntxt) {
-                                  return addUserInfoDialog(context, ref);
-                                });
+                              context: context,
+                              builder: (cntxt) =>
+                                  addUserInfoDialog(context, ref),
+                            );
                           } else {
                             customSnackBar(
                               context,
@@ -97,6 +95,7 @@ class _MqttActivityScreenState extends ConsumerState<MqttActivityScreen> {
     );
   }
 
+  /// Function which returns an alert dialog and let the user wait while a connection attempt is made to the broker
   AlertDialog connectingDialog() {
     return const AlertDialog(
       title: Text(
@@ -113,6 +112,7 @@ class _MqttActivityScreenState extends ConsumerState<MqttActivityScreen> {
     );
   }
 
+  /// Function which returns an alert dialog which is shown to the user to enter a nickname and proceed to chatting
   AlertDialog addUserInfoDialog(BuildContext context, WidgetRef ref) {
     final formKey = GlobalKey<FormState>();
     String nickName = "";

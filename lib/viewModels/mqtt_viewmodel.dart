@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
-import 'package:ble_mqtt_app/providers/mqtt_providers.dart';
-import 'package:ble_mqtt_app/utils/mqtt_helper.dart';
+import 'package:ble_mqtt_app/providers/mqtt/mqtt_providers.dart';
+import 'package:ble_mqtt_app/utils/mqtt/mqtt_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -10,17 +10,12 @@ class MqttViewModel {
   final MqttHelper mqttHelper = MqttHelper();
   MqttServerClient? mqttClient;
 
+  /// Initializes the mqttclient if it is null
   MqttViewModel() {
     mqttClient ??= mqttHelper.initializeMqttClient();
   }
 
-  String? verifyInput(String value) {
-    if (value.trim().isEmpty) {
-      return "This field is required";
-    }
-    return null;
-  }
-
+  /// Function which is used to connect with the mqtt broker and update the UI state
   Future<bool> connectMqttClient(
     WidgetRef ref,
     username,
@@ -61,6 +56,8 @@ class MqttViewModel {
     return isConnectionSuccess;
   }
 
+  /// Function which is used to listen for data incoming from the subscribed topic,
+  /// for disconnection and for failure while subscribing
   void setUpListeners(WidgetRef ref) {
     mqttClient!.onDisconnected = () {
       print("Client has been disconnected !!");
@@ -84,6 +81,7 @@ class MqttViewModel {
     });
   }
 
+  /// Function which is used to publish a new message to the broker
   void publishToTopics(String message) {
     final MqttClientPayloadBuilder builder = MqttClientPayloadBuilder();
     builder.addString(message);
@@ -96,6 +94,7 @@ class MqttViewModel {
     );
   }
 
+  /// Function which is used to subscribe to a topic
   void subscribeToTopics() {
     print('Subscribing to TOPIC: ${mqttHelper.sampleTopic}');
     mqttClient!.subscribe(mqttHelper.sampleTopic, MqttQos.atLeastOnce);

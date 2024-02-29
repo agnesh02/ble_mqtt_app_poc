@@ -1,13 +1,10 @@
 // ignore_for_file: avoid_print
 
-// ignore: unused_import
-import 'dart:math';
-
-import 'package:ble_mqtt_app/models/device_connection_state.dart';
-import 'package:ble_mqtt_app/models/edp_parameters.dart';
-import 'package:ble_mqtt_app/providers/ble_data_provider.dart';
-import 'package:ble_mqtt_app/providers/ble_provider.dart';
-import 'package:ble_mqtt_app/utils/ble_operations_helper.dart';
+import 'package:ble_mqtt_app/models/ble/device_connection_state.dart';
+import 'package:ble_mqtt_app/models/ble/edp_parameters.dart';
+import 'package:ble_mqtt_app/providers/ble/ble_data_provider.dart';
+import 'package:ble_mqtt_app/providers/ble/ble_provider.dart';
+import 'package:ble_mqtt_app/utils/ble/ble_operations_helper.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,18 +19,14 @@ class BleViewModel {
     return _instance;
   }
 
-  void monitorHardware(WidgetRef ref) {
-    FlutterBluePlus.adapterState.listen((event) {
-      print("ADAPTER STATE: $event");
-    });
-  }
-
+  /// Function which checks if the device supports BLE or not
   Future<bool> checkForBleSupport() async {
     bool isSupported = await FlutterBluePlus.isSupported;
     print("is BLE supported: $isSupported");
     return isSupported;
   }
 
+  /// Function which checks if all the necessary permissions are available or not
   Future<bool> checkForPermissions() async {
     bool permissionsGranted = false;
     if (await Permission.locationWhenInUse.request().isGranted &&
@@ -44,11 +37,13 @@ class BleViewModel {
     return permissionsGranted;
   }
 
+  /// Function which checks if location hardware is turned on or not
   Future<bool> checkLocationHardwareStatus() async {
     var isServiceEnabled = await Geolocator.isLocationServiceEnabled();
     return isServiceEnabled;
   }
 
+  /// Function which starts the scanning process
   void startScanning(WidgetRef ref) async {
     bool isBleSupported = await checkForBleSupport();
     if (!isBleSupported) {
@@ -62,6 +57,7 @@ class BleViewModel {
       return;
     }
 
+    // Listening to the scan results to update the list
     var subscription = FlutterBluePlus.onScanResults.listen(
       (scanResults) {
         if (scanResults.isNotEmpty) {
@@ -87,15 +83,18 @@ class BleViewModel {
     );
   }
 
+  /// Function which is used to create a connection with the device
   Future<bool> connectWithDevice(BluetoothDevice device, WidgetRef ref) async {
+    // Adding some delay manually
     await Future.delayed(const Duration(seconds: 1));
     bool? isConnectionSuccessful;
+
+    // Listening to the connection state changes for a device
     var subscription =
         device.connectionState.listen((BluetoothConnectionState state) async {
       if (state == BluetoothConnectionState.connected) {
         print("Device Connected");
 
-        print("Bonding with the device");
         final edpService = await discoverAndSetService(device);
 
         if (edpService == null) {
@@ -105,6 +104,8 @@ class BleViewModel {
 
         ref.read(edpServiceProvider.notifier).state = edpService;
 
+        print("Bonding attempt with the device");
+        // Performing an initial read to request the bonding process
         for (BluetoothCharacteristic charac in edpService.characteristics) {
           if (charac.characteristicUuid.toString() == uuidBatteryVoltage) {
             List<int> value = await charac.read(timeout: 40);
@@ -119,7 +120,7 @@ class BleViewModel {
       }
       if (state == BluetoothConnectionState.disconnected) {
         print(
-          "${device.advName} has been disconnected!!! -> ${device.disconnectReason!.code} ${device.disconnectReason!.description} ${device.disconnectReason}",
+          "${device.advName} has been disconnected!!! -> ${device.disconnectReason}",
         );
         isConnectionSuccessful = false;
         ref.read(bleStateProvider.notifier).updateConnectionState(
@@ -129,16 +130,28 @@ class BleViewModel {
       }
     });
 
-    FlutterBluePlus.events.onMtuChanged.listen((event) {
-      print("MTU changed................ ${event.mtu}");
+    // Helpful in updating UI while bonding
+    FlutterBluePlus.events.onConnectionStateChanged.listen((event) {
+      print(
+        "Connection state changed................ ${event.connectionState}",
+      );
       ref.read(bleStateProvider.notifier).updateConnectionState(
             device.remoteId,
             DeviceConnectionState.connecting,
           );
     });
 
+    // FlutterBluePlus.events.onMtuChanged.listen((event) {
+    //   print("MTU changed................ ${event.mtu}");
+    //   ref.read(bleStateProvider.notifier).updateConnectionState(
+    //         device.remoteId,
+    //         DeviceConnectionState.connecting,
+    //       );
+    // });
+
     device.cancelWhenDisconnected(subscription, delayed: true, next: true);
 
+    // Actual connection
     await device
         .connect(timeout: const Duration(seconds: 10))
         .onError((error, stackTrace) {
@@ -153,6 +166,7 @@ class BleViewModel {
     return isConnectionSuccessful!;
   }
 
+  /// Function which is used to discover and store the needed necessary service to use is later on
   Future<BluetoothService?> discoverAndSetService(
     BluetoothDevice device,
   ) async {
@@ -165,12 +179,15 @@ class BleViewModel {
     return null;
   }
 
+  /// Function which is used to write a new schedule therapy to the EDP device
   Future<void> scheduleTherapy(
     BluetoothDevice device,
     BluetoothService service,
+    int slot,
     DateTime startTime,
     int duration,
   ) async {
+    // Adding some delay manually
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
@@ -178,7 +195,7 @@ class BleViewModel {
         // Setting a new therapy schedule
         List<int> therapyScheduleData =
             BleOperationsHelper().generateTherapySchedulePacketFrame(
-          slotNumber: 1,
+          slotNumber: slot,
           durationInMinutes: duration,
           startTime: startTime,
         );
@@ -187,6 +204,8 @@ class BleViewModel {
     }
   }
 
+  /// Function to subscribe to commands and responses characteristic.
+  /// This characteristic notifies us with data based on the request/write we make to it.
   Future<void> subscribeToCommandsAndResponses(
       BluetoothDevice device, BluetoothService service, WidgetRef ref) async {
     for (BluetoothCharacteristic c in service.characteristics) {
@@ -194,60 +213,38 @@ class BleViewModel {
       if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
         final subscription = c.onValueReceived.listen((data) {
           print("NEW VALUE UNDER COMMAND AND RESPONSE !!");
-          // print(data);
 
           int responseType = data[2];
 
-          if (responseType == 37) {
-            print("SUCCESSFULLY UPDATED DEVICE TIME");
-            print(data);
-          }
-
-          if (responseType == 38) {
-            int slotNumber = data[3];
-            if (slotNumber != 0) {
-              print("SUCCESSFULLY SCHEDULED THERAPY IN SLOT");
+          switch (responseType) {
+            case 37:
+              print("SUCCESSFULLY UPDATED DEVICE TIME");
               print(data);
-            }
-          }
-
-          if (responseType == 21) {
-            print("FETCHED DEVICE TIME");
-            print(data);
-          }
-
-          if (responseType == 22) {
-            int slotNumber = data[3];
-            switch (slotNumber) {
-              case 1:
-                print("SHOWING SCHEDULED THERAPY IN SLOT 1");
+              break;
+            case 38:
+              int slotNumber = data[3];
+              if (slotNumber != 0) {
+                print("SUCCESSFULLY SCHEDULED THERAPY IN SLOT");
+                print(data);
+              }
+              break;
+            case 21:
+              print("FETCHED DEVICE TIME");
+              print(data);
+              break;
+            case 22:
+              int slotNumber = data[3];
+              if (slotNumber >= 1 && slotNumber <= 4) {
+                print("SHOWING SCHEDULED THERAPY IN SLOT $slotNumber");
                 print(data);
                 ref
                     .read(scheduledTherapiesProvider.notifier)
-                    .updateSlot(1, data);
-                break;
-              case 2:
-                print("SHOWING SCHEDULED THERAPY IN SLOT 2");
-                print(data);
-                ref
-                    .read(scheduledTherapiesProvider.notifier)
-                    .updateSlot(2, data);
-                break;
-              case 3:
-                print("SHOWING SCHEDULED THERAPY IN SLOT 3");
-                print(data);
-                ref
-                    .read(scheduledTherapiesProvider.notifier)
-                    .updateSlot(3, data);
-                break;
-              case 4:
-                print("SHOWING SCHEDULED THERAPY IN SLOT 4");
-                print(data);
-                ref
-                    .read(scheduledTherapiesProvider.notifier)
-                    .updateSlot(4, data);
-                break;
-            }
+                    .updateSlot(slotNumber, data);
+              }
+              break;
+            default:
+              // Handle other response types if needed
+              break;
           }
         });
         device.cancelWhenDisconnected(subscription);
@@ -256,10 +253,12 @@ class BleViewModel {
     }
   }
 
+  /// Function which is used to retrieve the scheduled therapies from the Elira device
   Future<void> getTherapySchedules(
     BluetoothDevice device,
     BluetoothService service,
   ) async {
+    // Adding some delay manually
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
@@ -270,10 +269,12 @@ class BleViewModel {
     }
   }
 
+  /// Function which is used to update the EDP device with the current time
   Future<void> updateDeviceTime(
     BluetoothDevice device,
     BluetoothService service,
   ) async {
+    // Adding some delay manually
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
@@ -287,8 +288,12 @@ class BleViewModel {
     }
   }
 
+  /// Function which is used to update the EDP device basic parameters
+  /// To get battery voltage, device temperature and amplitude
   Future<EdpParameters> checkDeviceParameters(
-      BluetoothDevice device, BluetoothService service) async {
+    BluetoothDevice device,
+    BluetoothService service,
+  ) async {
     EdpParameters edpParameters = EdpParameters(
       battery: "0",
       temperature: "0",
