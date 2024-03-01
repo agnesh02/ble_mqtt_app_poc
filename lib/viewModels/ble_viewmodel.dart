@@ -5,6 +5,7 @@ import 'package:ble_mqtt_app/models/ble/edp_parameters.dart';
 import 'package:ble_mqtt_app/providers/ble/ble_data_provider.dart';
 import 'package:ble_mqtt_app/providers/ble/ble_provider.dart';
 import 'package:ble_mqtt_app/utils/ble/ble_operations_helper.dart';
+import 'package:ble_mqtt_app/utils/ble/edp_helper.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -138,7 +139,8 @@ class BleViewModel {
         print("Bonding attempt with the device");
         // Performing an initial read to request the bonding process
         for (BluetoothCharacteristic charac in edpService.characteristics) {
-          if (charac.characteristicUuid.toString() == uuidBatteryVoltage) {
+          if (charac.characteristicUuid.toString() ==
+              EdpHelper.uuidBatteryVoltage) {
             List<int> value = await charac.read(timeout: 40);
             print(value);
             isConnectionSuccessful = true;
@@ -203,7 +205,7 @@ class BleViewModel {
   ) async {
     final services = await device.discoverServices();
     for (var service in services) {
-      if (service.uuid.toString() == uuidEdpService) {
+      if (service.uuid.toString() == EdpHelper.uuidEdpService) {
         return service;
       }
     }
@@ -222,7 +224,7 @@ class BleViewModel {
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
-      if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
+      if (c.characteristicUuid.toString() == EdpHelper.uuidCommandAndResponse) {
         // Setting a new therapy schedule
         List<int> therapyScheduleData =
             BleOperationsHelper().generateTherapySchedulePacketFrame(
@@ -241,7 +243,7 @@ class BleViewModel {
       BluetoothDevice device, BluetoothService service, WidgetRef ref) async {
     for (BluetoothCharacteristic c in service.characteristics) {
       // Listening to command and responses data
-      if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
+      if (c.characteristicUuid.toString() == EdpHelper.uuidCommandAndResponse) {
         final subscription = c.onValueReceived.listen((data) {
           print("NEW VALUE UNDER COMMAND AND RESPONSE !!");
 
@@ -293,9 +295,9 @@ class BleViewModel {
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
-      if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
+      if (c.characteristicUuid.toString() == EdpHelper.uuidCommandAndResponse) {
         // Retrieving scheduled therapies
-        await c.write([0xA5, 0x00, 0x24, 0x00, 0x00]);
+        await c.write(EdpHelper.commandGetTherapySchedules);
       }
     }
   }
@@ -309,12 +311,12 @@ class BleViewModel {
     await Future.delayed(const Duration(seconds: 1));
 
     for (BluetoothCharacteristic c in service.characteristics) {
-      if (c.characteristicUuid.toString() == uuidCommandAndResponse) {
+      if (c.characteristicUuid.toString() == EdpHelper.uuidCommandAndResponse) {
         // Updating device time
         var time = BleOperationsHelper().convertTimeToBytes(DateTime.now());
         await c.write([0xA5, 0x04, 0x19, ...time, 0x00]);
         // Get device time
-        await c.write([0xA5, 0x00, 0x25, 0x00, 0x00]);
+        await c.write(EdpHelper.commandGetDeviceTime);
       }
     }
   }
@@ -333,15 +335,15 @@ class BleViewModel {
     for (BluetoothCharacteristic charac in service.characteristics) {
       String characUUID = charac.characteristicUuid.toString();
       switch (characUUID) {
-        case uuidBatteryVoltage:
+        case EdpHelper.uuidBatteryVoltage:
           List<int> data = await charac.read();
           edpParameters.battery = "${data[0] / 10}V";
           break;
-        case uuidTemperature:
+        case EdpHelper.uuidTemperature:
           List<int> data = await charac.read();
           edpParameters.temperature = "${data[0]}°C";
           break;
-        case uuidAmplitude:
+        case EdpHelper.uuidAmplitude:
           List<int> data = await charac.read();
           edpParameters.amplitude = "${data[0]}mA";
           break;

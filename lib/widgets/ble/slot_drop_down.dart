@@ -24,21 +24,30 @@ class _SlotDropdownState extends State<SlotDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton(
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(),
+          borderRadius: BorderRadius.circular(10)),
+      child: DropdownButton(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         value: dropDownValue,
-        items: dropDownItems
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(e.toString()),
-              ),
-            )
-            .toList(),
+        items: dropDownItems.map((e) {
+          return DropdownMenuItem(
+            value: e,
+            child: Text(e.toString()),
+          );
+        }).toList(),
         onChanged: (newValue) {
           widget.onSelection(newValue!);
           setState(() {
             dropDownValue = newValue;
           });
-        });
+        },
+        icon: const Icon(Icons.arrow_drop_down),
+        underline: const SizedBox(),
+      ),
+    );
   }
 }

@@ -22,7 +22,20 @@ AlertDialog pickTimeDialog(
       width: 200,
       child: Column(
         children: [
-          _buildTimeSelectionRow(ref, selectedSlotNumber, context),
+          Row(
+            children: [
+              TextButton(
+                onPressed: () {},
+                child: const Text(
+                  "Select Slot :",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+              SlotDropdown(
+                onSelection: (value) => selectedSlotNumber = value,
+              ),
+            ],
+          ),
           _buildStartTimeRow(ref, context),
           _buildEndTimeRow(ref, context),
           const SizedBox(height: 20),
@@ -33,6 +46,7 @@ AlertDialog pickTimeDialog(
     actions: [
       TextButton(
         onPressed: () {
+          // print(selectedSlotNumber);
           _scheduleTherapy(ref, scheduleTherapy, selectedSlotNumber);
         },
         child: const Text("Schedule Therapy"),
@@ -42,25 +56,6 @@ AlertDialog pickTimeDialog(
           Navigator.of(context).pop();
         },
         child: const Text("Cancel"),
-      ),
-    ],
-  );
-}
-
-Widget _buildTimeSelectionRow(
-    WidgetRef ref, int selectedSlotNumber, BuildContext context) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      TextButton(
-        onPressed: () {},
-        child: const Text(
-          "Slot :",
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
-      SlotDropdown(
-        onSelection: (value) => selectedSlotNumber = value,
       ),
     ],
   );

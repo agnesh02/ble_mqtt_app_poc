@@ -65,9 +65,3 @@ class BleOperationsHelper {
     return dateTime;
   }
 }
-
-const uuidEdpService = "f000ee00-0451-4000-b000-000000000000";
-const uuidBatteryVoltage = "f000ee03-0451-4000-b000-000000000000";
-const uuidAmplitude = "f000ee04-0451-4000-b000-000000000000";
-const uuidTemperature = "f000ee01-0451-4000-b000-000000000000";
-const uuidCommandAndResponse = "f000ee07-0451-4000-b000-000000000000";
