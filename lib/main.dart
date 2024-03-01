@@ -1,9 +1,11 @@
 import 'package:ble_mqtt_app/screens/splash_screen.dart';
+import 'package:ble_mqtt_app/utils/ble/notification_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  NotificationHelper().initAwesomeNotifications();
   runApp(const ProviderScope(child: MyApp()));
 }
 

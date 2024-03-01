@@ -40,6 +40,7 @@ class _BleInteractionScreenState extends ConsumerState<BleInteractionScreen> {
     BleViewModel().subscribeToCommandsAndResponses(
       widget.device,
       ref.read(edpServiceProvider)!,
+      context,
       ref,
     );
   }

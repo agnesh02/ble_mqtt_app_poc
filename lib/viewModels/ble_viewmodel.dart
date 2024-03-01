@@ -1,11 +1,15 @@
 // ignore_for_file: avoid_print
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:ble_mqtt_app/models/ble/device_connection_state.dart';
 import 'package:ble_mqtt_app/models/ble/edp_parameters.dart';
 import 'package:ble_mqtt_app/providers/ble/ble_data_provider.dart';
 import 'package:ble_mqtt_app/providers/ble/ble_provider.dart';
+import 'package:ble_mqtt_app/providers/ble/time_provider.dart';
 import 'package:ble_mqtt_app/utils/ble/ble_operations_helper.dart';
 import 'package:ble_mqtt_app/utils/ble/edp_helper.dart';
+import 'package:ble_mqtt_app/utils/ble/notification_helper.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -240,33 +244,51 @@ class BleViewModel {
   /// Function to subscribe to commands and responses characteristic.
   /// This characteristic notifies us with data based on the request/write we make to it.
   Future<void> subscribeToCommandsAndResponses(
-      BluetoothDevice device, BluetoothService service, WidgetRef ref) async {
+    BluetoothDevice device,
+    BluetoothService service,
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     for (BluetoothCharacteristic c in service.characteristics) {
       // Listening to command and responses data
       if (c.characteristicUuid.toString() == EdpHelper.uuidCommandAndResponse) {
         final subscription = c.onValueReceived.listen((data) {
           print("NEW VALUE UNDER COMMAND AND RESPONSE !!");
 
-          int responseType = data[2];
+          int indexOfResponseType = 2;
+          int indexOfSlotNumber = 3;
+          int responseType = data[indexOfResponseType];
 
           switch (responseType) {
-            case 37:
+            case EdpHelper.responseTypeUpdateDeviceTime:
               print("SUCCESSFULLY UPDATED DEVICE TIME");
+              NotificationHelper().createNewNotification(
+                title: '${Emojis.symbols_repeat_button} Synced !!',
+                message: 'Synced time with EDP Device successfully.',
+              );
               print(data);
               break;
-            case 38:
-              int slotNumber = data[3];
+            case EdpHelper.responseTypeScheduleTherapy:
+              int slotNumber = data[indexOfSlotNumber];
+              final startTime = ref.read(timingsProvider).startTime;
+              final duration = ref.read(timingsProvider).duration;
+
               if (slotNumber != 0) {
                 print("SUCCESSFULLY SCHEDULED THERAPY IN SLOT");
                 print(data);
+                NotificationHelper().createNewNotification(
+                  title: '${Emojis.time_alarm_clock} Therapy Scheduled !!',
+                  message:
+                      'You have successfully scheduled a new therapy. Time: ${displayTiming(context, startTime)} | Duration: $duration minutes',
+                );
               }
               break;
-            case 21:
+            case EdpHelper.responseTypeFetchDeviceTime:
               print("FETCHED DEVICE TIME");
               print(data);
               break;
-            case 22:
-              int slotNumber = data[3];
+            case EdpHelper.responseTypeFetchTherapiesScheduled:
+              int slotNumber = data[indexOfSlotNumber];
               if (slotNumber >= 1 && slotNumber <= 4) {
                 print("SHOWING SCHEDULED THERAPY IN SLOT $slotNumber");
                 print(data);
@@ -276,7 +298,6 @@ class BleViewModel {
               }
               break;
             default:
-              // Handle other response types if needed
               break;
           }
         });

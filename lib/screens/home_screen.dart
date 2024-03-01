@@ -1,5 +1,6 @@
 import 'package:ble_mqtt_app/screens/ble/ble_activity_screen.dart';
 import 'package:ble_mqtt_app/screens/mqtt/mqtt_activity_screen.dart';
+import 'package:ble_mqtt_app/utils/ble/notification_helper.dart';
 import 'package:ble_mqtt_app/utils/mqtt/connection_mode.dart';
 import 'package:ble_mqtt_app/widgets/common/functionality_selection.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends ConsumerWidget {
               if (mode == ConnectionMode.mqtt) {
                 preferredScreen = const MqttActivityScreen();
               }
+              NotificationHelper().requestPermission();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (cntxt) => preferredScreen,

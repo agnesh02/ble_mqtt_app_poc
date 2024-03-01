@@ -7,4 +7,9 @@ class EdpHelper {
 
   static const commandGetDeviceTime = [0xA5, 0x00, 0x25, 0x00, 0x00];
   static const commandGetTherapySchedules = [0xA5, 0x00, 0x24, 0x00, 0x00];
+
+  static const responseTypeUpdateDeviceTime = 37;
+  static const responseTypeFetchDeviceTime = 21;
+  static const responseTypeScheduleTherapy = 38;
+  static const responseTypeFetchTherapiesScheduled = 22;
 }
