@@ -7,25 +7,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Holds the start and end time chose by the user from [pickTimeDialog]
 class ScheduleTherapyTimings {
   ScheduleTherapyTimings({
-    this.startTime = const TimeOfDay(hour: 3, minute: 15),
-    this.endTime = const TimeOfDay(hour: 3, minute: 30),
-  });
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    int? duration,
+  })  : startTime = startTime ?? TimeOfDay.now(),
+        endTime = endTime ?? TimeOfDay.now(),
+        duration = calculateDuration(
+          startTime ?? TimeOfDay.now(),
+          endTime ?? TimeOfDay.now(),
+        );
 
   final TimeOfDay startTime;
   final TimeOfDay endTime;
+  final int duration;
 }
 
 class TimingsNotifier extends StateNotifier<ScheduleTherapyTimings> {
   TimingsNotifier() : super(ScheduleTherapyTimings());
 
   void updateStartTime(TimeOfDay selectedStartTime) {
+    updateDuration(selectedStartTime, state.endTime);
     state = ScheduleTherapyTimings(
-        startTime: selectedStartTime, endTime: state.endTime);
+      startTime: selectedStartTime,
+      endTime: state.endTime,
+      duration: state.duration,
+    );
   }
 
   void updateEndTime(TimeOfDay selectedEndTime) {
+    updateDuration(state.startTime, selectedEndTime);
     state = ScheduleTherapyTimings(
-        startTime: state.startTime, endTime: selectedEndTime);
+      startTime: state.startTime,
+      endTime: selectedEndTime,
+      duration: state.duration,
+    );
+  }
+
+  void updateDuration(TimeOfDay selectedStartTime, TimeOfDay selectedEndTime) {
+    final result = calculateDuration(
+      selectedStartTime,
+      selectedEndTime,
+    );
+    state = ScheduleTherapyTimings(
+      startTime: selectedStartTime,
+      endTime: selectedEndTime,
+      duration: result,
+    );
   }
 }
 

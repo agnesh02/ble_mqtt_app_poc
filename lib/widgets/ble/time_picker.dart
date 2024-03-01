@@ -18,7 +18,7 @@ AlertDialog pickTimeDialog(
   return AlertDialog(
     title: const Text("Select Time"),
     content: SizedBox(
-      height: 240,
+      height: 250,
       width: 200,
       child: Column(
         children: [
@@ -44,13 +44,18 @@ AlertDialog pickTimeDialog(
       ),
     ),
     actions: [
-      TextButton(
-        onPressed: () {
-          // print(selectedSlotNumber);
-          _scheduleTherapy(ref, scheduleTherapy, selectedSlotNumber);
-        },
-        child: const Text("Schedule Therapy"),
-      ),
+      Consumer(builder: (cntxt, ref, child) {
+        final timings = ref.watch(timingsProvider);
+        return TextButton(
+          onPressed: () {
+            // print(selectedSlotNumber);
+            _scheduleTherapy(ref, scheduleTherapy, selectedSlotNumber);
+          },
+          child: timings.duration < 1
+              ? SizedBox()
+              : const Text("Schedule Therapy"),
+        );
+      }),
       TextButton(
         onPressed: () {
           Navigator.of(context).pop();
@@ -126,18 +131,32 @@ Widget _buildEndTimeRow(WidgetRef ref, BuildContext context) {
 Widget _buildDurationWidget(WidgetRef ref) {
   return Column(
     children: [
-      CircleAvatar(
-        maxRadius: 25,
-        child: Consumer(
-          builder: (context, ref, child) {
-            final timings = ref.watch(timingsProvider);
-            return Text(
-              calculateDuration(timings.startTime, timings.endTime).toString(),
-              style: const TextStyle(fontSize: 20),
-            );
-          },
-        ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(width: 35),
+          CircleAvatar(
+            maxRadius: 25,
+            child: Consumer(
+              builder: (context, ref, child) {
+                final timings = ref.watch(timingsProvider);
+                return Text(
+                  timings.duration.toString(),
+                  style: const TextStyle(fontSize: 20),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 25),
+            child: const Text(
+              " (minutes)",
+              style: TextStyle(fontSize: 10),
+            ),
+          ),
+        ],
       ),
+      SizedBox(height: 10),
       const Text("Duration"),
     ],
   );
